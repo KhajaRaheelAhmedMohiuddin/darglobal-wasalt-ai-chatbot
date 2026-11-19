@@ -367,6 +367,10 @@
       .hero h1 { margin-top: 16px; }
     }
     .scrim { position: fixed; inset: 0; background: rgba(10, 10, 12, .38); z-index: 30; backdrop-filter: blur(2px); }
+    /* Smooth colour change when the theme is switched (class added only during the switch) */
+    html.theme-fade, html.theme-fade *, html.theme-fade *::before, html.theme-fade *::after {
+      transition: background-color .22s ease, border-color .22s ease, color .22s ease, fill .22s ease, box-shadow .22s ease !important;
+    }
     @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
   </style>
 </head>
@@ -607,13 +611,32 @@
       if (set) return set;
       return matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
     }
-    function paintThemeIcon() { $("#themeBtn use").setAttribute("href", currentTheme() === "dark" ? "#i-sun" : "#i-moon"); }
+    const THEME_BAR = { light: "#f7f5f1", dark: "#0d0e10" };
+    function paintThemeIcon() {
+      const theme = currentTheme();
+      const next = theme === "dark" ? "light" : "dark";
+      const btn = $("#themeBtn");
+      $("use", btn).setAttribute("href", theme === "dark" ? "#i-sun" : "#i-moon");
+      btn.title = `Switch to ${next} theme`;
+      btn.setAttribute("aria-label", `Switch to ${next} theme`);
+      // Browser address-bar colour on phones: follow the chosen theme, or the system when none is chosen
+      document.querySelectorAll('meta[name="theme-color"]').forEach((m) => {
+        m.setAttribute("content", document.documentElement.dataset.theme ? THEME_BAR[theme] : (/dark/.test(m.media) ? THEME_BAR.dark : THEME_BAR.light));
+      });
+    }
+    let fadeTimer;
     $("#themeBtn").addEventListener("click", () => {
       const next = currentTheme() === "dark" ? "light" : "dark";
-      document.documentElement.dataset.theme = next;
+      const root = document.documentElement;
+      root.classList.add("theme-fade");
+      root.dataset.theme = next;
       try { localStorage.setItem("dw-theme", next); } catch (e) {}
       paintThemeIcon();
+      clearTimeout(fadeTimer);
+      fadeTimer = setTimeout(() => root.classList.remove("theme-fade"), 260);
     });
+    // Keep the icon right if the system theme changes while no choice is saved
+    matchMedia("(prefers-color-scheme: dark)").addEventListener("change", paintThemeIcon);
     paintThemeIcon();
 
     // ------------------------------------------------------------------
