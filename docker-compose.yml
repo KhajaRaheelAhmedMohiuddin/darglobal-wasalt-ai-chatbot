@@ -1,0 +1,31 @@
+services:
+  chatbot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: darglobal-wasalt-chatbot
+    ports:
+      - "7860:7860"
+      - "8000:7860"
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY:-}
+      - OPENROUTER_MODEL=${OPENROUTER_MODEL:-}
+      - OPENROUTER_FALLBACK_MODEL=${OPENROUTER_FALLBACK_MODEL:-}
+      - PORT=7860
+    volumes:
+      - ./app/data:/app/app/data
+    restart: unless-stopped
+
+  scraper:
+    build:
+      context: .
+      dockerfile: Dockerfile.scraper
+    container_name: darglobal-wasalt-scraper
+    profiles:
+      - scraper
+    volumes:
+      - ./app/data:/app/app/data
+    command: ["--output", "app/data/scraped_data.json"]

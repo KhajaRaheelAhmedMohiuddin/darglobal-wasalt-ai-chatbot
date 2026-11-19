@@ -1,0 +1,19 @@
+# Render Blueprint: alternative deployment to Hugging Face Spaces.
+# In Render: New + -> Blueprint -> connect this GitHub repository.
+# Render asks for OPENROUTER_API_KEY during setup (sync: false keeps it out of this file).
+services:
+  - type: web
+    name: darglobal-wasalt-ai-chatbot
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    plan: free
+    region: singapore
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: OPENROUTER_API_KEY
+        sync: false
+      # Render's free plan puts one proxy in front of the app
+      - key: TRUSTED_PROXY_HOPS
+        value: "1"
