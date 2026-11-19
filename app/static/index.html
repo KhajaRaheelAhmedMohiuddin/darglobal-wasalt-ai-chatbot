@@ -671,14 +671,28 @@
         const n = index.get(key);
         const text = a.textContent.trim();
         // Keep short natural link text ("Aston Martin"), turn long titles / "Source" into a numbered marker
-        const keepText = text.length > 0 && text.length <= 26 && !/^(source|view|link|here|details|partner page|listing|open|page|darglobal|dar global|wasalt)\b/i.test(text) && !/part\s*\d+\/\d+/i.test(text);
+        // A link standing alone on its line ("Source: [Directory](url)") keeps its title, otherwise only a number would remain
+        const rest = (a.parentElement ? a.parentElement.textContent : "").replace(a.textContent, "").replace(/sources?|[\s:–—\-.,()]/gi, "");
+        const standalone = rest === "" && !!a.parentElement && /^(P|LI)$/.test(a.parentElement.tagName);
+        if (standalone) { a.textContent = sources[n - 1].title; }
+        const keepText = standalone || text.length > 0 && text.length <= 26 && !/^(source|view|link|here|details|partner page|listing|open|page|darglobal|dar global|wasalt)\b/i.test(text) && !/part\s*\d+\/\d+/i.test(text);
         const cite = document.createElement("a");
         cite.className = "cite"; cite.href = href; cite.target = "_blank"; cite.rel = "noopener noreferrer";
         cite.textContent = String(n); cite.title = sources[n - 1].title;
         const frag = document.createDocumentFragment();
-        if (keepText) frag.appendChild(document.createTextNode(text));
+        if (keepText) frag.appendChild(document.createTextNode(standalone ? a.textContent + " " : text));
         frag.appendChild(cite);
         a.replaceWith(frag);
+      });
+      // Merge back-to-back markers for the same source ("1 1" -> "1")
+      box.querySelectorAll("a.cite").forEach((c) => {
+        let prev = c.previousSibling;
+        while (prev && prev.nodeType === 3 && !prev.textContent.trim()) prev = prev.previousSibling;
+        if (prev && prev.nodeType === 1 && prev.classList.contains("cite") && prev.textContent === c.textContent) {
+          const gap = c.previousSibling;
+          if (gap && gap !== prev && gap.nodeType === 3) gap.remove();
+          c.remove();
+        }
       });
       return { html: box.innerHTML, sources };
     }
