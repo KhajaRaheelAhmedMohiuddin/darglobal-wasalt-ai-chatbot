@@ -54,6 +54,7 @@ An AI assistant that answers questions about **DarGlobal** (projects, partners, 
 - **BM25, not embeddings.** The corpus is small (1,804 chunks) and full of exact names (DG1, Astera, district names, listing IDs) where keyword matching is precise. It also needs no embedding API, GPU or extra model download, so the image stays small and starts in seconds. Abbreviation expansion covers the common vocabulary gaps (GDV ↔ gross development value, 3BR ↔ 3 bedrooms).
 - **Grounding.** The system prompt allows only facts from the retrieved context, requires a source link for each statement, prefers the most recent figure when sources disagree, and requires a refusal when the answer isn't in the data.
 - **Citation validation.** The server checks every link in the model's answer against the retrieved sources. Links that don't come from the retrieved pages are removed (the text is kept), and an answer with no valid citation gets the consulted source pages appended, so every factual answer stays traceable.
+- **Interface.** A single HTML file with no build step: light and dark themes, answers with numbered citations and source cards, a panel showing the exact passages each answer was built from (with relevance scores), live status, model picker, related follow-up questions, and a layout that works on phones. It is served gzip-compressed (about 20 KB).
 - **Follow-up questions.** The page sends the last 6 turns of the conversation. Short follow-ups ("and in Jeddah?", "when is handover?") are searched together with the previous question, and the model sees the conversation, while facts must still come from the retrieved context.
 - **Model choice.** At startup the app reads OpenRouter's live model list, scores the free models (parameter count, instruct tuning, context length) and picks the strongest as primary and the next as fallback. Free models change often; this avoids hard-coding a model that later disappears.
 - **Reliability.** Each question tries the primary model, retries it once (unless rate-limited), then tries the fallback model. If all fail, the user still gets a clearly labelled answer listing the most relevant scraped sources, rather than an error.
@@ -104,7 +105,7 @@ pip install -r requirements.txt -r requirements-dev.txt
 python -m pytest -v
 ```
 
-43 automated tests cover search quality (GDV, partners, bedrooms, projects, districts, listing IDs), the API (success, cache, fallback model, graceful degradation, daily-quota handling, input validation, rate limiting), citation validation, follow-up conversations, security (paid-model blocking, spoofed proxy headers) and the scraper's URL parsers. OpenRouter is mocked, so no key or network is needed. GitHub Actions (`.github/workflows/ci.yml`) runs the tests, builds the Docker image and smoke-tests the container on every push.
+42 automated tests cover search quality (GDV, partners, bedrooms, projects, districts, listing IDs), the API (success, cache, fallback model, graceful degradation, daily-quota handling, input validation, rate limiting), citation validation, follow-up conversations, security (paid-model blocking, spoofed proxy headers) and the scraper's URL parsers. OpenRouter is mocked, so no key or network is needed. GitHub Actions (`.github/workflows/ci.yml`) runs the tests, builds the Docker image and smoke-tests the container on every push.
 
 ## Deploy
 
@@ -138,7 +139,7 @@ python -m pytest -v
 ```
 app/main.py              FastAPI app: retrieval, prompt, model selection, fallback, cache, rate limit
 app/scraper.py           DarGlobal (Playwright) and Wasalt (sitemap) scraper
-app/static/index.html    Chat UI (Markdown rendering via vendored marked + DOMPurify)
+app/static/index.html    Chat interface (single file, no build step; vendored marked + DOMPurify)
 app/data/scraped_data.json  Scraped knowledge base (1,804 records)
 tests/test_app.py        Automated tests
 Dockerfile               App image (non-root, health check)

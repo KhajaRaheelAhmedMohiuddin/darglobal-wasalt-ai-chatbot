@@ -12,6 +12,7 @@ import httpx
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
@@ -174,6 +175,8 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+# Compress responses (the page and the knowledge base are text)
+app.add_middleware(GZipMiddleware, minimum_size=1000)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -508,10 +511,13 @@ def retrieval_only_answer(chunks: List[Dict[str, Any]], reason: str) -> str:
     best = max((c.get("bm25_score", 0.0) for c in chunks), default=0.0)
     relevant = [c for c in chunks if c.get("bm25_score", 0.0) >= 0.6 * best] or chunks[:1]
     for c in relevant[:5]:
-        snippet = re.sub(r"\s+", " ", c.get("text", "")).strip()
+        snippet = re.sub(r"https?://\S+", "", c.get("text", ""))  # each passage already gets its own [Source] link
+        snippet = re.sub(r"(\s*;\s*)+", "; ", snippet)
+        snippet = re.sub(r"\s+", " ", snippet).strip(" ;,")
         if len(snippet) > 280:
             snippet = snippet[:280].rsplit(" ", 1)[0] + "…"
-        lines.append(f"- **{c.get('title', 'Source')}** — {snippet} [Source]({c.get('url')})")
+        body = f" — {snippet}" if snippet else ""
+        lines.append(f"- **{c.get('title', 'Source')}**{body} [Source]({c.get('url')})")
     return "\n".join(lines)
 
 

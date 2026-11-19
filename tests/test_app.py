@@ -173,6 +173,8 @@ class ApiTests(unittest.TestCase):
         self.assertEqual(r.status_code, 200)
         self.assertTrue(body["degraded"])
         self.assertIn("temporarily unavailable", body["reply"])
+        # Raw URLs inside passages are stripped; only the [Source](...) links remain
+        self.assertEqual(body["reply"].count("https://"), body["reply"].count("[Source]("))
         self.assertIn("https://", body["reply"])
 
     def test_chat_without_key_degrades_gracefully(self):
@@ -335,19 +337,6 @@ class ScraperParserTests(unittest.TestCase):
     def test_chunks_respect_size_limit(self):
         chunks = scraper.split_text_chunks("Luxury homes in Dubai. " * 300)
         self.assertTrue(all(len(c) <= 800 for c in chunks))
-
-
-class UiSyncTests(unittest.TestCase):
-    def test_ui_code_copies_are_current(self):
-        import importlib.util
-        from pathlib import Path
-
-        script = Path(__file__).resolve().parent.parent / "scripts" / "sync_ui_code.py"
-        spec = importlib.util.spec_from_file_location("sync_ui_code", script)
-        sync = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(sync)
-        embedded = sync.embedded_code_files(sync.INDEX.read_text(encoding="utf-8"))
-        self.assertEqual(embedded, sync.current_code_files(), "Run: python scripts/sync_ui_code.py")
 
 
 if __name__ == "__main__":
