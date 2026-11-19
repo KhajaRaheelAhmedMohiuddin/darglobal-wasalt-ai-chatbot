@@ -1,4 +1,4 @@
-# Render Blueprint: alternative deployment to Hugging Face Spaces.
+# Render Blueprint for the live deployment.
 # In Render: New + -> Blueprint -> connect this GitHub repository.
 # Render asks for OPENROUTER_API_KEY during setup (sync: false keeps it out of this file).
 services:

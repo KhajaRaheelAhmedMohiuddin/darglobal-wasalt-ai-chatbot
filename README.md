@@ -1,17 +1,15 @@
----
-title: DarGlobal & Wasalt AI Property Chatbot
-emoji: 🏢
-colorFrom: blue
-colorTo: green
-sdk: docker
-app_port: 7860
----
-
 # DarGlobal & Wasalt AI Property Chatbot
 
 An AI assistant that answers questions about **DarGlobal** (projects, partners, press, investor information) and **Wasalt** (Saudi property listings, cities and districts), grounded in data scraped from both public websites. Every answer cites its source pages, and the bot says *"I don't have that information"* rather than guessing.
 
-**Live demo:** _<add the Hugging Face URL here after deployment>_
+**Live demo:** https://darglobal-wasalt-ai-chatbot.onrender.com
+
+## For reviewers
+
+- **Try it:** open the live demo, with nothing to install. It runs on Render's free plan, which sleeps after 15 minutes without visitors, so **the first page load can take about a minute**; after that it responds normally.
+- **Run it yourself:** create a free key at [openrouter.ai](https://openrouter.ai), put it in `.env` (see `.env.example`), then run `docker compose up --build` and open <http://localhost:7860>.
+- **Check the build:** the [Actions tab](../../actions) shows the automated tests and Docker build for every push.
+- **Good questions to try:** "What is DarGlobal's GDV?", "Who does DarGlobal partner with?", "Which districts in North Riyadh have villas for sale?", "What is the price of Wasalt listing #5907931?" (the price isn't in the data, so the bot says so), and a follow-up such as "Tell me about The Astera" then "When is handover?".
 
 | Assessment step | How it is met |
 |---|---|
@@ -19,7 +17,7 @@ An AI assistant that answers questions about **DarGlobal** (projects, partners, 
 | 2. AI chatbot on the data | Retrieval-augmented generation: BM25 search over the scraped records, then an LLM answers only from the retrieved text, with source links |
 | 3. Free OpenRouter model | The largest available free (`:free`) instruct model is picked automatically at startup, with a second free model as backup |
 | 4. Docker | `Dockerfile` (non-root, health check), `docker-compose.yml`, separate scraper image |
-| 5–6. Deployed with a working URL | Hugging Face Docker Space (link above) |
+| 5–6. Deployed with a working URL | Docker web service on Render, auto-deployed from this repository (link above) |
 
 ## Example questions
 
@@ -110,14 +108,9 @@ python -m pytest -v
 
 ## Deploy
 
-**Hugging Face Docker Space** (primary)
+**Render** (live deployment). `render.yaml` is a ready Blueprint: in Render choose **New → Blueprint**, connect this GitHub repository and enter `OPENROUTER_API_KEY` when asked. Alternatively create a **Web Service** with runtime **Docker** from this repository and add `OPENROUTER_API_KEY` under **Environment**. Every push to `main` redeploys automatically. The free plan sleeps after 15 minutes without traffic; the first request then takes about a minute.
 
-1. Create a new Space on huggingface.co and choose the **Docker** SDK (the front matter at the top of this README configures it).
-2. In the Space's **Settings → Variables and secrets**, add a secret named `OPENROUTER_API_KEY`.
-3. Push this repository to the Space (`git push https://huggingface.co/spaces/<user>/<space> main`), **without** the `.env` file.
-4. The app is served at `https://<username>-<space-name>.hf.space`.
-
-**Render** (alternative): `render.yaml` is a ready Blueprint. In Render choose **New → Blueprint**, connect this GitHub repository and enter `OPENROUTER_API_KEY` when asked. Note that Render's free plan sleeps after 15 minutes without traffic (first request then takes about a minute); Hugging Face sleeps after 48 hours.
+**Any Docker host** works the same way: build the `Dockerfile`, set `OPENROUTER_API_KEY`, and expose the port given in `PORT` (default 7860).
 
 ## Configuration
 

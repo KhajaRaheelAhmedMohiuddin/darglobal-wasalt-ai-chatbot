@@ -2,7 +2,7 @@
 
 ## Secrets
 
-- The OpenRouter API key is read only from the `OPENROUTER_API_KEY` environment variable, which comes from a local `.env` file or the hosting platform's secret store (Hugging Face Space secrets).
+- The OpenRouter API key is read only from the `OPENROUTER_API_KEY` environment variable, which comes from a local `.env` file or the hosting platform's secret store (Render environment variables).
 - `.env` is excluded by both `.gitignore` and `.dockerignore`, so it is never committed or copied into a Docker image. `.env.example` contains only a placeholder.
 - The key is never sent to the browser. All model calls are made by the server.
 

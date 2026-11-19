@@ -568,7 +568,7 @@ async def call_openrouter_once(
     }
 
 
-@app.get("/api/health")
+@app.api_route("/api/health", methods=["GET", "HEAD"])
 async def health():
     kb = load_kb()
     has_key = bool(os.getenv("OPENROUTER_API_KEY", "").strip())
@@ -751,6 +751,6 @@ async def chat_endpoint(req: ChatRequest, request: Request):
 app.mount("/static", StaticFiles(directory=Path(__file__).parent / "static"), name="static")
 
 
-@app.get("/")
+@app.api_route("/", methods=["GET", "HEAD"])
 async def index():
     return FileResponse(Path(__file__).parent / "static" / "index.html")

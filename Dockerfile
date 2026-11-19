@@ -5,7 +5,7 @@ ENV PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1 \
     PORT=7860
 
-# Run as an unprivileged user (UID 1000 is what Hugging Face Spaces expects)
+# Run as an unprivileged user
 RUN useradd --create-home --uid 1000 appuser
 WORKDIR /app
 

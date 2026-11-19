@@ -132,6 +132,8 @@ class ApiTests(unittest.TestCase):
 
     def test_index_and_vendored_assets(self):
         self.assertEqual(self.client.get("/").status_code, 200)
+        self.assertEqual(self.client.head("/").status_code, 200)  # hosting health probes use HEAD
+        self.assertEqual(self.client.head("/api/health").status_code, 200)
         self.assertEqual(self.client.get("/static/vendor/marked.min.js").status_code, 200)
         self.assertEqual(self.client.get("/static/vendor/purify.min.js").status_code, 200)
 
